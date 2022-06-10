@@ -1,14 +1,14 @@
-import { createEnemy, scoreFromEnemy } from "./entities";
+import { createEnemy, scoreFromEnemy } from './entities';
 import {
   addEntity,
   killAllEntities,
   killEntity,
   removeDeadEntities,
-} from "./state";
-import { Enemy, Entity, GameState } from "./types";
-import { createLevel, levelBackgrounds } from "./levels";
-import { bonusScore } from "./constants";
-import { getSnakePosition } from "./utils";
+} from './state';
+import { Enemy, Entity, GameState } from './types';
+import { createLevel, levelBackgrounds } from './levels';
+import { bonusScore } from './constants';
+import { getSnakePosition } from './utils';
 
 /**
  * The main update function. Runs during each animation frame, runs the whole game play loop
@@ -81,19 +81,19 @@ function updateEntities(state: GameState, updateTime: number, delta: number) {
   state.entities.forEach((entity) => {
     // Shots go in a straight direction based on their velocity.
     const prevStyles = window.getComputedStyle(entity.el);
-    if (entity.type === "shot") {
+    if (entity.type === 'shot') {
       const newPos = {
         x: parseFloat(prevStyles.left) + entity.velocity.x * delta,
         y: parseFloat(prevStyles.top) + entity.velocity.y * delta,
       };
       entity.el.style.left = `${newPos.x}px`;
       entity.el.style.top = `${newPos.y}px`;
-    } else if (entity.type === "enemy") {
+    } else if (entity.type === 'enemy') {
       // Enemies move differently based on their variant.
       const { speed, variant } = entity.enemySpawn;
 
       // Normal and "sine" enemies generally move down according to some speed.
-      if (variant === "normal" || variant === "sine") {
+      if (variant === 'normal' || variant === 'sine') {
         const newY =
           parseFloat(prevStyles.top) +
           window.innerHeight * entity.enemySpawn.speed * delta;
@@ -101,7 +101,7 @@ function updateEntities(state: GameState, updateTime: number, delta: number) {
       }
 
       // Additionally, "sine" enemies move in a sine wave pattern.
-      if (variant === "sine") {
+      if (variant === 'sine') {
         const newX =
           entity.enemySpawn.position.x +
           Math.sin(
@@ -113,7 +113,7 @@ function updateEntities(state: GameState, updateTime: number, delta: number) {
       }
 
       // Finally, "snake" enemies move according to predefined lines across the screen.
-      if (variant === "snake") {
+      if (variant === 'snake') {
         const newPos = getSnakePosition(
           entity.enemySpawn.lines,
           updateTime - entity.spawnTime,
@@ -139,7 +139,7 @@ function checkCollisions(state: GameState) {
     // Check if the entity is colliding with the screen boundaries.
     const rectA = entityA.el.getBoundingClientRect();
     const outsideBounds =
-      entityA.type === "shot"
+      entityA.type === 'shot'
         ? // Shots collide with all boundaries.
           rectA.top > window.innerHeight ||
           rectA.bottom < 0 ||
@@ -149,7 +149,7 @@ function checkCollisions(state: GameState) {
           rectA.top > window.innerHeight;
 
     if (outsideBounds) {
-      if (entityA.type === "enemy") {
+      if (entityA.type === 'enemy') {
         // Oh no!
         loseLive(state);
       } else {
@@ -173,8 +173,10 @@ function checkCollisions(state: GameState) {
         );
 
         // Hardcoding entityA=shot and entityB=enemy since we're checking every combination anyways. 😇
-        const shotVsEnemy = entityA.type === "shot" && entityB.type === "enemy";
+        const shotVsEnemy = entityA.type === 'shot' && entityB.type === 'enemy';
+
         if (hit && shotVsEnemy) {
+          console.log('hit');
           // Yay!
           killEntity(entityA);
           killEntity(entityB);
@@ -196,12 +198,15 @@ function checkCollisions(state: GameState) {
 function updateUI(state: GameState, delta: number) {
   // Update the gameplay status UI.
   if (state.statusEl) {
-    state.statusEl.innerText = `Level: ${state.level}\nLives: ${state.lives}\nScore: ${state.score}`;
+    const newStatusValue =
+      (state.statusEl.innerText = `Level: ${state.level}\nLives: ${state.lives}\nScore: ${state.score}`);
+    if (state.statusEl.innerText !== newStatusValue) {
+      state.statusEl.innerText = newStatusValue;
+    }
   }
-
   // Show and hide the modal.
   if (state.modalEl) {
-    state.modalEl.style.opacity = state.modalTime ? "1" : "0";
+    state.modalEl.style.opacity = state.modalTime ? '1' : '0';
   }
 
   // Counting down while a modal is open until the game starts again. Note, the end-game modals have
@@ -233,7 +238,7 @@ function loseLive(state: GameState) {
 
     // "reload" the same level with all of the remaining enemies.
     const activeEnemies = state.entities
-      .filter((entity) => entity.type === "enemy" && !entity.dead)
+      .filter((entity) => entity.type === 'enemy' && !entity.dead)
       .map((entity) => (entity as Enemy).enemySpawn);
 
     state.enemySpawns = [...activeEnemies, ...state.enemySpawns];
@@ -248,7 +253,7 @@ function loseLive(state: GameState) {
 function checkEndLevel(state: GameState) {
   const enemiesRemaining =
     state.enemySpawns.length ||
-    state.entities.some((entity) => entity.type === "enemy" && !entity.dead);
+    state.entities.some((entity) => entity.type === 'enemy' && !entity.dead);
 
   // Nah, still some enemies to be killed. Keep playing!
   if (enemiesRemaining) {
@@ -274,7 +279,7 @@ function checkEndLevel(state: GameState) {
   state.enemySpawns = createLevel(state.level);
   state.enemyCount = state.enemySpawns.length;
   if (state.levelBgEl) {
-    state.levelBgEl.style.backgroundColor = levelBackgrounds[state.level];
+    state.levelBgEl.style.opacity = levelBackgrounds[state.level] ? '1' : '0';
   }
 
   // Or end the game.
